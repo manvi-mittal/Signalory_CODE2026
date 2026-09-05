@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Signalory — a thesis-aware market workspace that turns evidence into attention.">
+  <title>{% block title %}Signalory — Know what changed. Know why it matters.{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="app-shell"><aside class="sidebar">
+  <div class="brand-wrap"><a class="brand" href="{{ url_for('views.dashboard') }}"><span class="brand-mark"><i></i><i></i><i></i></span><span>Signalory</span></a><div class="brand-sub">Evidence, not noise.</div></div>
+  <nav class="side-nav" aria-label="Primary">
+    <a class="nav-item active" href="{{ url_for('views.dashboard') }}"><span>◈</span>Focus board</a>
+    <a class="nav-item" href="{{ url_for('views.dashboard') }}#theses"><span>◎</span>My hypotheses</a>
+    <a class="nav-item" href="{{ url_for('views.add_stock') }}"><span>＋</span>Build a hypothesis</a>
+    <a class="nav-item" href="{{ url_for('views.signal_map') }}"><span>⌁</span>Signal map</a>
+    <a class="nav-item" href="{{ url_for('views.dashboard') }}#checkpoints"><span>◇</span>Checkpoints</a>
+  </nav>
+  <div class="sidebar-card"><div class="mini-label">THE SIGNALORY PRINCIPLE</div><h3>A watchlist stores symbols.<br>Signalory stores reasons.</h3><p>Every idea starts with a belief. We keep the baseline visible until reality gives you a reason to revisit it.</p><a href="{{ url_for('views.add_stock') }}" class="side-cta">Start an idea <b>→</b></a></div>
+  <div class="sidebar-bottom"><div class="profile-card"><div class="avatar">{{ current_user.email[0]|upper }}</div><div><strong>{{ current_user.email.split('@')[0] }}</strong><small>{{ current_user.email }}</small></div><a href="{{ url_for('auth.logout') }}" title="Log out">↪</a></div></div>
+</aside><main class="main-panel"><header class="topbar"><div class="mobile-brand"><span class="brand-mark"><i></i><i></i><i></i></span>Signalory</div><div class="command"><span>⌕</span><input disabled placeholder="Search a stock, hypothesis or signal"><kbd>⌘ K</kbd></div><div class="top-actions"><div class="market-badge"><span></span>Market data</div><div class="top-avatar">{{ current_user.email[0]|upper }}</div></div></header><div class="page-content">
+{% else %}
+<div class="public-shell"><header class="public-nav"><a class="brand" href="{{ url_for('views.index') }}"><span class="brand-mark"><i></i><i></i><i></i></span><span>Signalory</span></a><div><a href="{{ url_for('auth.login') }}" class="public-link">Log in</a><a href="{{ url_for('auth.register') }}" class="btn btn-accent">Build your workspace</a></div></header>
+{% endif %}
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="flash flash-{{ 'danger' if category == 'error' else 'success' }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+{% if current_user.is_authenticated %}</div></main></div>{% else %}</div>{% endif %}
+</body></html>
