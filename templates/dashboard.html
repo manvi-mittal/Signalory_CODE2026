@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Focus board — Signalory{% endblock %}
+{% block content %}
+<section class="hero-head">
+  <div>
+    <div class="eyebrow">YOUR ATTENTION LAYER</div>
+    {% if not cards %}<h1>Turn a stock into a hypothesis.</h1><p>Signalory starts with the reason you care. Then it sorts new evidence into what deserves attention, what supports you, and what can wait.</p>
+    {% elif meaningful_count %}<h1>{{ meaningful_count }} idea{{ 's' if meaningful_count != 1 else '' }} need a second look.</h1><p>Your focus board ranks the hypotheses where new evidence changed the balance — not simply the stocks that moved the most.</p>
+    {% else %}<h1>Your ideas are quiet.</h1><p>No tracked hypothesis has moved enough to demand your attention since the last review.</p>{% endif %}
+  </div>
+  <a href="{{ url_for('views.add_stock') }}" class="btn btn-accent">＋ New hypothesis</a>
+</section>
+
+{% if not cards %}
+<section class="launch-grid">
+  <div class="launch-card"><div class="launch-number">01</div><div class="launch-icon">✦</div><div class="eyebrow">THE CORE IDEA</div><h2>Don't watch 50 stocks.<br>Watch 3 beliefs.</h2><p>Write what needs to be true for your idea to work. Signalory remembers the baseline and shows you when reality starts leaning against it.</p><a href="{{ url_for('views.add_stock') }}" class="btn btn-accent">Build the first hypothesis →</a></div>
+  <div class="workflow-card"><div class="eyebrow">THE SIGNAL LOOP</div><div class="loop-row"><span>01</span><div><strong>State the belief</strong><small>Capture the exact reason you are watching.</small></div></div><div class="loop-row"><span>02</span><div><strong>Define the failure point</strong><small>Choose one measurable checkpoint.</small></div></div><div class="loop-row"><span>03</span><div><strong>Log the evidence</strong><small>Signals can support, contradict or stay neutral.</small></div></div><div class="loop-row"><span>04</span><div><strong>Review the balance</strong><small>Return to a ranked attention queue.</small></div></div></div>
+</section>
+{% else %}
+{% if meaningful_count %}
+<section class="return-brief">
+  <div class="return-stamp">RETURN BRIEF</div>
+  <div class="return-copy"><strong>{{ meaningful_count }} meaningful change{{ 's' if meaningful_count != 1 else '' }} since your last check.</strong><span>Signalory ignores ordinary movement and surfaces evidence that touches the reason you chose to watch.</span></div>
+  <div class="return-rule"><span>READ THIS FIRST</span><b>Belief → Evidence → Consequence</b></div>
+</section>
+{% else %}
+<section class="return-brief quiet">
+  <div class="return-stamp">RETURN BRIEF</div>
+  <div class="return-copy"><strong>No thesis-level change detected.</strong><span>That is a useful result too — Signalory keeps routine price noise out of your attention queue.</span></div>
+  <div class="return-rule"><span>ATTENTION FILTER</span><b>Price ≠ importance</b></div>
+</section>
+{% endif %}
+<section class="pulse-strip">
+  <div><span>NEEDS REVIEW</span><strong>{{ meaningful_count }}</strong><small>since last check</small></div>
+  <div><span>HYPOTHESES</span><strong>{{ cards|length }}</strong><small>being monitored</small></div>
+  <div><span>CHECKPOINTS</span><strong>{{ checkpoint_count }}</strong><small>defined by you</small></div>
+  <div><span>DATA FRESHNESS</span><strong>{{ fresh_count }}/{{ cards|length }}</strong><small>recent market snapshots</small></div>
+</section>
+
+<div class="board-grid" id="theses">
+  <section class="board-main">
+    <div class="section-bar"><div><div class="section-title">Attention queue</div><div class="section-desc">Ranked by thesis impact, not price movement.</div></div><a href="{{ url_for('views.signal_map') }}" class="text-link">Open signal map →</a></div>
+    {% for c in cards %}
+    {% set item=c.item %}{% set result=c.result %}{% set market=c.market %}
+    <article class="hypothesis-card status-{{ result.status }}">
+      <div class="card-topline"><span class="rank">{{ '%02d'|format(loop.index) }}</span><span class="status-pill status-{{ result.status }}"><i></i>{{ result.status.replace('_',' ') }}</span>{% if c.drifted %}<span class="drift-pill">Hypothesis drift</span>{% endif %}<span class="attention">Attention <b>{{ c.attention_score }}</b></span></div>
+      <div class="hypothesis-grid">
+        <div class="hypothesis-copy"><div class="stock-row"><div class="stock-avatar">{{ item.stock.symbol[:2] }}</div><div><a href="{{ url_for('views.thesis_detail', thesis_id=item.thesis.id) }}" class="stock-symbol">{{ item.stock.symbol }}</a><div class="stock-name">{{ item.stock.name }}</div></div></div><p class="thesis-quote">“{{ item.thesis.current_text }}”</p><div class="tag-row">{% for s in item.thesis.signals[:3] %}<span>{{ s.category.replace('_',' ') }}</span>{% endfor %}</div></div>
+        <div class="balance-box"><div class="balance-head"><span>Evidence balance</span><b>{{ c.balance_label }}</b></div><div class="balance-bar"><span class="support" style="width:{{ c.support_pct }}%"></span><span class="contra" style="width:{{ c.contra_pct }}%"></span></div><div class="balance-legend"><span><i class="dot support"></i>{{ c.support_count }} supporting</span><span><i class="dot contra"></i>{{ c.contra_count }} contradicting</span></div></div>
+        <div class="market-box"><span>MARKET CONTEXT</span><strong>₹{{ '%.2f'|format(market.price) if market.price else '—' }}</strong><b class="{{ 'up' if market.change_pct > 0 else 'down' if market.change_pct < 0 else 'neutral' }}">{{ '+' if market.change_pct > 0 else '' }}{{ '%.2f'|format(market.change_pct) }}%</b><small>{% if market.is_stale %}Delayed snapshot{% else %}Fresh snapshot{% endif %}</small></div>
+      </div>
+      <div class="change-memo">
+        <div><span>CHANGE</span><strong>{% if result.status == 'BROKEN' %}Your own checkpoint was crossed.{% elif result.status == 'WEAKENING' %}New evidence is leaning against the belief.{% elif result.status == 'STRENGTHENING' %}New evidence is reinforcing the belief.{% elif result.status == 'MIXED' %}The evidence is pulling in both directions.{% else %}Nothing material changed since the last review.{% endif %}</strong></div>
+        <div><span>CONSEQUENCE</span><strong>{% if result.status in ('WEAKENING','BROKEN') %}Re-read the thesis before spending more attention here.{% elif result.status == 'STRENGTHENING' %}The original reason for watching remains supported.{% elif result.status == 'MIXED' %}Decide which side has stronger, newer evidence.{% else %}Keep it in the background for now.{% endif %}</strong></div>
+      </div>
+      <div class="signal-line"><div><span class="mini-label">WHY IT IS ON THE BOARD</span><p>{% if result.reasons %}{{ result.reasons[0] }}{% else %}No new evidence has shifted this hypothesis.{% endif %}</p></div><div class="card-actions"><a href="{{ url_for('views.thesis_detail', thesis_id=item.thesis.id) }}" class="btn btn-ghost">Review evidence</a><form method="post" action="{{ url_for('views.remove_stock', item_id=item.id) }}" onsubmit="return confirm('Remove this hypothesis from your workspace?');"><button class="icon-delete" title="Remove">×</button></form></div></div>
+    </article>
+    {% endfor %}
+  </section>
+  <aside class="right-rail">
+    <div class="rail-card score-card"><div class="rail-kicker">WORKSPACE PULSE</div><div class="score-ring"><div><strong>{{ focus_score }}</strong><small>/100</small></div></div><h3>Focus score</h3><p>Higher means more of your tracked hypotheses currently have evidence worth reviewing.</p></div>
+    <div class="rail-card" id="checkpoints"><div class="rail-head"><span>Open checkpoints</span><span class="count-badge">{{ checkpoint_count }}</span></div>{% if checkpoints %}{% for cp in checkpoints[:3] %}<div class="checkpoint"><div><strong>{{ cp.symbol }}</strong><span>{{ cp.description }}</span></div><a href="{{ url_for('views.thesis_detail', thesis_id=cp.thesis_id) }}">→</a></div>{% endfor %}{% else %}<p class="rail-muted">No measurable failure points yet. Add one to make an idea falsifiable.</p>{% endif %}</div>
+    <div class="rail-card"><div class="rail-head"><span>Signal legend</span></div><div class="legend-row"><i class="dot support"></i><span>Supporting</span><b>+</b></div><div class="legend-row"><i class="dot contra"></i><span>Contradicting</span><b>−</b></div><div class="legend-row"><i class="dot neutral"></i><span>Neutral</span><b>•</b></div><a href="{{ url_for('views.signal_map') }}" class="rail-link">Explore all signals →</a></div>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

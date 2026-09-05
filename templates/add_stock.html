@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Build a hypothesis — Signalory{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <a href="{{ url_for('views.dashboard') }}" class="back-link">← Focus board</a>
+  <div class="form-header"><div class="eyebrow">HYPOTHESIS LAB</div><h1>Don't add a stock.<br>Write down a belief.</h1><p>Signalory is built around a simple question: <em>what would have to change for you to care differently?</em></p></div>
+  <form method="post" class="form-card">
+    <div class="form-section"><div class="step-label"><span>01</span><div><label class="form-label">The company</label><small>Use the NSE ticker you want to monitor.</small></div></div><input type="text" name="symbol" class="form-control form-control-lg" placeholder="TCS, INFY, HDFCBANK, TATAMOTORS" required maxlength="20"></div>
+    <div class="form-section"><div class="step-label"><span>02</span><div><label class="form-label">The belief</label><small>Write the reason in one or two sentences.</small></div></div><textarea name="thesis_text" class="form-control thesis-input" rows="6" maxlength="1000" placeholder="I think TCS's AI and cloud growth will accelerate while margins remain resilient." required></textarea><div class="example-pills"><span>growth</span><span>margins</span><span>execution</span><span>management</span></div></div>
+    <div class="form-section checkpoint-builder"><div class="step-label"><span>03</span><div><label class="form-label">Your “prove me wrong” point <em>optional</em></label><small>One measurable fact that would force you to revisit the thesis.</small></div></div><div class="checkpoint-grid"><select name="breaker_metric" class="form-select"><option value="">No checkpoint yet</option><option value="operating_margin">Operating margin</option><option value="revenue_growth_yoy">Revenue growth (YoY)</option></select><select name="breaker_operator" class="form-select"><option value="<">falls below</option><option value=">">rises above</option><option value="<=">falls to or below</option><option value=">=">rises to or above</option></select><input type="number" step="0.1" name="breaker_threshold" class="form-control" placeholder="8.0"></div></div>
+    <div class="form-footer"><a href="{{ url_for('views.dashboard') }}" class="back-link">Cancel</a><button type="submit" class="btn btn-accent btn-lg">Add to focus board <span>→</span></button></div>
+  </form>
+</div>
+{% endblock %}
